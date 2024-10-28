@@ -36,8 +36,9 @@ func (l loginHandler) ServeHTTP(writer http.ResponseWriter, request *http.Reques
 		writer.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	token, err := l.authenticator.Login(request.Context(), req.Username, req.Password)
 	writer.Header().Set("Content-Type", "application/json")
+
+	token, err := l.authenticator.Login(request.Context(), req.Username, req.Password)
 	if err != nil {
 		writer.WriteHeader(http.StatusUnauthorized)
 		if errors.Is(err, auth.InvalidCredentialsError) {
@@ -50,6 +51,7 @@ func (l loginHandler) ServeHTTP(writer http.ResponseWriter, request *http.Reques
 		fmt.Printf("authentication error: %s", err.Error())
 		return
 	}
+
 	res := loginResponse{
 		Token: token,
 	}

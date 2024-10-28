@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"gateway-service/internal/config"
-	httpserver "gateway-service/internal/httpserver"
+	"gateway-service/internal/httpserver"
 	"golang.org/x/sync/errgroup"
 	"os"
 	"os/signal"
