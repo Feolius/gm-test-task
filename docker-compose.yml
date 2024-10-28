@@ -1,0 +1,34 @@
+version: '3'
+
+services:
+  db:
+    container_name: test_task_db
+    build:
+      context: db
+      dockerfile: Dockerfile
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_DATABASE: ${DB_NAME}
+    volumes:
+      - ./mysql-data:/var/lib/mysql:cached
+      - ./logs/db:/var/log/mysql:cached
+  auth-generator:
+    container_name: test_task_auth_generator
+    image: andrianovartemii/gm-test-task-auth-generator:latest
+    ports:
+      - "8082:8080"
+    environment:
+      AUTH_TOKEN_LIFETIME: 30
+  currency-service:
+    container_name: test_task_currency_service
+    build:
+      context: currency-service
+      dockerfile: Dockerfile
+  gateway-service:
+    container_name: test_task_gateway_service
+    build:
+      context: gateway-service
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+

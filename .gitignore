@@ -23,3 +23,7 @@ go.work.sum
 
 # env file
 .env
+.idea
+/logs
+/mysql-data
+.DS_Store
