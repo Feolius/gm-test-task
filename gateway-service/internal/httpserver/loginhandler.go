@@ -4,9 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	auth "gateway-service/internal/authenticator"
 	"gateway-service/internal/config"
+	"log"
 	"net/http"
 )
 
@@ -41,14 +41,14 @@ func (l loginHandler) ServeHTTP(writer http.ResponseWriter, request *http.Reques
 	token, err := l.authenticator.Login(request.Context(), req.Username, req.Password)
 	if err != nil {
 		writer.WriteHeader(http.StatusUnauthorized)
-		if errors.Is(err, auth.InvalidCredentialsError) {
+		if errors.Is(err, auth.ErrInvalidCredentials) {
 			writer.Header().Set("Content-Type", "application/json")
 			_ = json.NewEncoder(writer).Encode(struct {
 				Error string `json:"error"`
 			}{Error: "invalid credentials"})
 			return
 		}
-		fmt.Printf("authentication error: %s", err.Error())
+		log.Printf("authentication error: %s", err.Error())
 		return
 	}
 
@@ -58,6 +58,6 @@ func (l loginHandler) ServeHTTP(writer http.ResponseWriter, request *http.Reques
 	err = json.NewEncoder(writer).Encode(res)
 	if err != nil {
 		writer.WriteHeader(http.StatusInternalServerError)
-		fmt.Printf("login response encoding error: %s", err.Error())
+		log.Printf("login response encoding error: %s", err.Error())
 	}
 }

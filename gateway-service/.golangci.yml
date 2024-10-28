@@ -327,8 +327,7 @@ issues:
   # Default: 3
   max-same-issues: 50
   exclude-files:
-    - examples/persistent_survey_bot.go
-    - examples/tasks_bot.go
+    - internal/userstorage/in-memory-storage.go
 
   exclude-rules:
     - source: "(noinspection|TODO)"

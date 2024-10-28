@@ -2,13 +2,14 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"gateway-service/internal/config"
 	"gateway-service/internal/httpserver"
-	"golang.org/x/sync/errgroup"
+	"log"
 	"os"
 	"os/signal"
 	"syscall"
+
+	"golang.org/x/sync/errgroup"
 )
 
 func main() {
@@ -27,6 +28,6 @@ func main() {
 	})
 
 	if err := g.Wait(); err != nil {
-		fmt.Printf("exit reason: %s \n", err)
+		log.Printf("exit reason: %s \n", err)
 	}
 }

@@ -7,7 +7,10 @@ import (
 	"gateway-service/internal/userstorage"
 	"net"
 	"net/http"
+	"time"
 )
+
+const ReadHeaderTimeoutInSeconds = 2
 
 func NewHttpServer(ctx context.Context, cfg *config.Config) *http.Server {
 	mux := http.NewServeMux()
@@ -21,6 +24,7 @@ func NewHttpServer(ctx context.Context, cfg *config.Config) *http.Server {
 		BaseContext: func(_ net.Listener) context.Context {
 			return ctx
 		},
+		ReadHeaderTimeout: ReadHeaderTimeoutInSeconds * time.Second,
 	}
 
 	return httpServer

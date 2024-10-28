@@ -326,9 +326,6 @@ issues:
   # Set to 0 to disable.
   # Default: 3
   max-same-issues: 50
-  exclude-files:
-    - examples/persistent_survey_bot.go
-    - examples/tasks_bot.go
 
   exclude-rules:
     - source: "(noinspection|TODO)"
