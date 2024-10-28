@@ -1,15 +1,32 @@
 package main
 
 import (
-	"log"
-	"net/http"
+	"context"
+	"fmt"
+	"gateway-service/internal/config"
+	httpserver "gateway-service/internal/httpserver"
+	"golang.org/x/sync/errgroup"
+	"os"
+	"os/signal"
+	"syscall"
 )
 
 func main() {
-	mux := http.NewServeMux()
-	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("hello"))
+	cfg := config.GetConfig()
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+
+	g, gCtx := errgroup.WithContext(ctx)
+	httpServer := httpserver.NewHttpServer(ctx, cfg)
+	g.Go(func() error {
+		return httpServer.ListenAndServe()
 	})
-	err := http.ListenAndServe(":3000", mux)
-	log.Fatal(err)
+	g.Go(func() error {
+		<-gCtx.Done()
+		return httpServer.Shutdown(context.Background())
+	})
+
+	if err := g.Wait(); err != nil {
+		fmt.Printf("exit reason: %s \n", err)
+	}
 }
