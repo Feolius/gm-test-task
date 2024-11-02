@@ -32,7 +32,7 @@ type Authenticator struct {
 	cfg          *config.Config
 }
 
-func (a *Authenticator) Login(ctx context.Context, username, password string) (string, error) {
+func (a *Authenticator) GetToken(ctx context.Context, username, password string) (string, error) {
 	user, err := a.userSearcher.FindByUsernameAndPassword(ctx, username, password)
 	if err != nil {
 		return "", fmt.Errorf("error on attempt to load user by login credentials: %w", err)
@@ -62,7 +62,7 @@ func (a *Authenticator) Login(ctx context.Context, username, password string) (s
 	return string(token), nil
 }
 
-// Authenticate Ideally this method must return User.
+// Authenticate Ideally this method returns User.
 func (a *Authenticator) Authenticate(ctx context.Context, req *http.Request) error {
 	token := req.Header.Get("Authorization")
 	if token == "" {

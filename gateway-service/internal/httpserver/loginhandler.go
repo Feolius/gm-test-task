@@ -4,19 +4,18 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	auth "gateway-service/internal/authenticator"
 	"gateway-service/internal/config"
 	"log"
 	"net/http"
 )
 
-type authenticator interface {
-	Login(ctx context.Context, username, password string) (string, error)
+type tokenProvider interface {
+	getToken(ctx context.Context, username, password string) (string, error)
 }
 
 type loginHandler struct {
-	cfg           *config.Config
-	authenticator authenticator
+	cfg *config.Config
+	tokenProvider
 }
 
 type loginRequest struct {
@@ -38,10 +37,11 @@ func (l loginHandler) ServeHTTP(writer http.ResponseWriter, request *http.Reques
 	}
 	writer.Header().Set("Content-Type", "application/json")
 
-	token, err := l.authenticator.Login(request.Context(), req.Username, req.Password)
+	token, err := l.tokenProvider.getToken(request.Context(), req.Username, req.Password)
 	if err != nil {
 		writer.WriteHeader(http.StatusUnauthorized)
-		if errors.Is(err, auth.ErrInvalidCredentials) {
+		var invalidCredentialsErr *invalidCredentialsError
+		if errors.As(err, &invalidCredentialsErr) {
 			writer.Header().Set("Content-Type", "application/json")
 			_ = json.NewEncoder(writer).Encode(struct {
 				Error string `json:"error"`

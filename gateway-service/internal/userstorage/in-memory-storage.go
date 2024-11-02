@@ -12,7 +12,7 @@ var storage = [5]User{
 
 type InMemoryStorage struct{}
 
-func (s InMemoryStorage) FindByUsernameAndPassword(ctx context.Context, username, password string) (User, error) {
+func (s *InMemoryStorage) FindByUsernameAndPassword(ctx context.Context, username, password string) (User, error) {
 	for _, user := range storage {
 		if user.Login == username && user.Password == password {
 			return user, nil
