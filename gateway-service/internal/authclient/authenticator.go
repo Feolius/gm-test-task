@@ -1,11 +1,10 @@
-package authenticator
+package authclient
 
 import (
 	"context"
 	"errors"
 	"fmt"
 	"gateway-service/internal/config"
-	"gateway-service/internal/userstorage"
 	"io"
 	"net/http"
 	"net/url"
@@ -17,27 +16,34 @@ const validateTokenPath = "validate"
 
 var ErrInvalidCredentials = errors.New("invalid credentials")
 var ErrAuthServiceTokenGen = errors.New("auth service token generation failed")
-var ErrTokenNotProvided = errors.New("token not provided")
 var ErrInvalidTokenFormat = errors.New("invalid token format")
 var ErrAuthServiceTokenNotProvided = errors.New("auth token not provided for authentication service")
 var ErrAuthServiceTokenExpired = errors.New("auth service token expired")
 var ErrAuthServiceUnexpectedError = errors.New("auth service unexpected error")
 
-type UserSearcher interface {
-	FindByUsernameAndPassword(ctx context.Context, username, password string) (userstorage.User, error)
+type User struct {
+	Id int
 }
 
-type Authenticator struct {
+func (u *User) empty() bool {
+	return u.Id == 0
+}
+
+type UserSearcher interface {
+	FindByUsernameAndPassword(ctx context.Context, username, password string) (User, error)
+}
+
+type AuthClient struct {
 	userSearcher UserSearcher
 	cfg          *config.Config
 }
 
-func (a *Authenticator) GetToken(ctx context.Context, username, password string) (string, error) {
+func (a *AuthClient) GetToken(ctx context.Context, username, password string) (string, error) {
 	user, err := a.userSearcher.FindByUsernameAndPassword(ctx, username, password)
 	if err != nil {
 		return "", fmt.Errorf("error on attempt to load user by login credentials: %w", err)
 	}
-	if user.Empty() {
+	if user.empty() {
 		return "", fmt.Errorf("%w", ErrInvalidCredentials)
 	}
 	// @TODO put url scheme inside config as well
@@ -62,15 +68,8 @@ func (a *Authenticator) GetToken(ctx context.Context, username, password string)
 	return string(token), nil
 }
 
-// Authenticate Ideally this method returns User.
-func (a *Authenticator) Authenticate(ctx context.Context, req *http.Request) error {
-	token := req.Header.Get("Authorization")
-	if token == "" {
-		return fmt.Errorf("%w", ErrTokenNotProvided)
-	}
-	if !strings.HasPrefix(token, "Bearer ") {
-		return fmt.Errorf("%w", ErrInvalidTokenFormat)
-	}
+// CheckToken Ideally should return User.
+func (a *AuthClient) CheckToken(ctx context.Context, token string) error {
 	token = strings.TrimPrefix(token, "Bearer ")
 	validateTokenUrl := buildAuthServiceUrl("http", a.cfg.AuthHost, a.cfg.AuthPort, validateTokenPath)
 	req, err := http.NewRequest(http.MethodGet, validateTokenUrl, nil)
@@ -97,8 +96,8 @@ func (a *Authenticator) Authenticate(ctx context.Context, req *http.Request) err
 	return nil
 }
 
-func NewAuthenticator(userSearcher UserSearcher, cfg *config.Config) *Authenticator {
-	return &Authenticator{
+func NewAuthClient(userSearcher UserSearcher, cfg *config.Config) *AuthClient {
+	return &AuthClient{
 		userSearcher: userSearcher,
 		cfg:          cfg,
 	}

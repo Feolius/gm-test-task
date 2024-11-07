@@ -4,9 +4,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"gateway-service/internal/authenticator"
+	"gateway-service/internal/authclient"
 	"gateway-service/internal/userstorage"
+	"net/http"
+	"strings"
 )
+
+var ErrTokenNotProvided = errors.New("token not provided")
+var ErrInvalidTokenFormat = errors.New("invalid token format")
 
 type invalidCredentialsError struct {
 	username string
@@ -22,13 +27,13 @@ func (e *invalidCredentialsError) Unwrap() error {
 }
 
 type authTokenProvider struct {
-	*authenticator.Authenticator
+	*authclient.AuthClient
 }
 
 func (p *authTokenProvider) getToken(ctx context.Context, username, password string) (string, error) {
-	token, err := p.Authenticator.GetToken(ctx, username, password)
+	token, err := p.AuthClient.GetToken(ctx, username, password)
 	if err != nil {
-		if errors.Is(err, authenticator.ErrInvalidCredentials) {
+		if errors.Is(err, authclient.ErrInvalidCredentials) {
 			return "", &invalidCredentialsError{username, err}
 		}
 		return "", fmt.Errorf("failed to get token for user %s: %w", username, err)
@@ -42,6 +47,30 @@ type inMemoryUserSearcher struct {
 
 func (s *inMemoryUserSearcher) FindByUsernameAndPassword(
 	ctx context.Context, username, password string,
-) (userstorage.User, error) {
-	return s.storage.FindByUsernameAndPassword(ctx, username, password)
+) (authclient.User, error) {
+	storageUser, err := s.storage.FindByUsernameAndPassword(ctx, username, password)
+	if err != nil {
+		return authclient.User{}, err
+	}
+	return authclient.User{Id: storageUser.Id}, nil
+}
+
+type authClientAuthenticator struct {
+	*authclient.AuthClient
+}
+
+func (a *authClientAuthenticator) authenticate(req *http.Request) error {
+	token := req.Header.Get("Authorization")
+	if token == "" {
+		return fmt.Errorf("%w", ErrTokenNotProvided)
+	}
+	if !strings.HasPrefix(token, "Bearer ") {
+		return fmt.Errorf("%w", ErrInvalidTokenFormat)
+	}
+	token = strings.TrimPrefix(token, "Bearer ")
+	err := a.AuthClient.CheckToken(req.Context(), token)
+	if err != nil {
+		return err
+	}
+	return nil
 }
