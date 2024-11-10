@@ -4,6 +4,7 @@ import (
 	"context"
 	migrations "currency-service/db"
 	"currency-service/internal/config"
+	"currency-service/internal/cron"
 	"currency-service/internal/httpserver"
 	"database/sql"
 	"fmt"
@@ -31,6 +32,10 @@ func main() {
 		os.Getenv("DB_USER"), os.Getenv("DB_PASSWORD"), os.Getenv("DB_HOST"), os.Getenv("DB_PORT"), os.Getenv("DB_NAME")))
 	if err != nil {
 		log.Panicf("error connecting to database: %v", err)
+	}
+	err = cron.ScheduleCronJobs(ctx, cfg, db)
+	if err != nil {
+		log.Panicf("error scheduling cron jobs: %v", err)
 	}
 
 	g, gCtx := errgroup.WithContext(ctx)
