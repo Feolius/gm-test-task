@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"gateway-service/internal/authclient"
-	"gateway-service/internal/userstorage"
+	"gateway-service/internal/repository"
 	"net/http"
 	"strings"
 )
@@ -42,13 +42,13 @@ func (p *authTokenProvider) getToken(ctx context.Context, username, password str
 }
 
 type inMemoryUserSearcher struct {
-	storage *userstorage.InMemoryStorage
+	repository *repository.InMemoryUserRepository
 }
 
 func (s *inMemoryUserSearcher) FindByUsernameAndPassword(
 	ctx context.Context, username, password string,
 ) (authclient.User, error) {
-	storageUser, err := s.storage.FindByUsernameAndPassword(ctx, username, password)
+	storageUser, err := s.repository.FindByUsernameAndPassword(ctx, username, password)
 	if err != nil {
 		return authclient.User{}, err
 	}

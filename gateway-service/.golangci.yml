@@ -327,7 +327,7 @@ issues:
   # Default: 3
   max-same-issues: 50
   exclude-files:
-    - internal/userstorage/in-memory-storage.go
+    - internal/repository/in-memory-storage.go
 
   exclude-rules:
     - source: "(noinspection|TODO)"

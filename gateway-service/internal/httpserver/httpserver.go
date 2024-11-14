@@ -4,7 +4,7 @@ import (
 	"context"
 	"gateway-service/internal/authclient"
 	"gateway-service/internal/config"
-	"gateway-service/internal/userstorage"
+	"gateway-service/internal/repository"
 	"net"
 	"net/http"
 	"time"
@@ -13,8 +13,8 @@ import (
 const ReadHeaderTimeoutInSeconds = 2
 
 func NewHttpServer(ctx context.Context, cfg *config.Config) *http.Server {
-	userStorage := userstorage.NewInMemoryStorage()
-	userSearcher := &inMemoryUserSearcher{userStorage}
+	userRepository := repository.NewInMemoryUserRepository()
+	userSearcher := &inMemoryUserSearcher{userRepository}
 	authClient := authclient.NewAuthClient(userSearcher, cfg)
 	authHandler := authMiddleware(&authClientAuthenticator{authClient})
 

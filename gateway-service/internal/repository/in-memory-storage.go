@@ -1,4 +1,4 @@
-package userstorage
+package repository
 
 import "context"
 
@@ -10,9 +10,9 @@ var storage = [5]User{
 	{Id: 5, Login: "test5", Password: "pass5"},
 }
 
-type InMemoryStorage struct{}
+type InMemoryUserRepository struct{}
 
-func (s *InMemoryStorage) FindByUsernameAndPassword(ctx context.Context, username, password string) (User, error) {
+func (s *InMemoryUserRepository) FindByUsernameAndPassword(ctx context.Context, username, password string) (User, error) {
 	for _, user := range storage {
 		if user.Login == username && user.Password == password {
 			return user, nil
@@ -21,6 +21,6 @@ func (s *InMemoryStorage) FindByUsernameAndPassword(ctx context.Context, usernam
 	return User{}, nil
 }
 
-func NewInMemoryStorage() *InMemoryStorage {
-	return &InMemoryStorage{}
+func NewInMemoryUserRepository() *InMemoryUserRepository {
+	return &InMemoryUserRepository{}
 }
