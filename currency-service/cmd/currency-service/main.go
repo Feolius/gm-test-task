@@ -28,8 +28,7 @@ func main() {
 	if err != nil {
 		log.Panicf("error running migrations: %v", err)
 	}
-	db, err := sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true",
-		os.Getenv("DB_USER"), os.Getenv("DB_PASSWORD"), os.Getenv("DB_HOST"), os.Getenv("DB_PORT"), os.Getenv("DB_NAME")))
+	db, err := sql.Open("mysql", dbstring)
 	if err != nil {
 		log.Panicf("error connecting to database: %v", err)
 	}

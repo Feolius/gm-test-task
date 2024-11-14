@@ -3,7 +3,7 @@
 CREATE TABLE IF NOT EXISTS currency_rates (
     day date NOT NULL,
     currency VARCHAR(255) NOT NULL,
-    rate VARCHAR(255) NOT NULL,
+    rate double NOT NULL,
     PRIMARY KEY (day, currency)
 );
 -- +goose StatementEnd

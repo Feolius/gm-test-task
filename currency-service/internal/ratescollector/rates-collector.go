@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -16,8 +17,8 @@ type RatesCollector struct {
 }
 
 type apiResponse struct {
-	Date string                 `json:"date"`
-	Rub  map[string]interface{} `json:"rub"`
+	Date string             `json:"date"`
+	Rub  map[string]float64 `json:"rub"`
 }
 
 func (rc *RatesCollector) Collect(ctx context.Context) error {
@@ -25,11 +26,13 @@ func (rc *RatesCollector) Collect(ctx context.Context) error {
 	if err != nil {
 		return fmt.Errorf("could not create api request to collect rates: %w", err)
 	}
+
 	response, err := http.DefaultClient.Do(request)
 	if err != nil {
 		return fmt.Errorf("could not fetch rates: %w", err)
 	}
 	defer response.Body.Close()
+
 	if response.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(response.Body)
 		return fmt.Errorf("could not fetch rates: response status %s, response msg: %s", response.Status, body)
@@ -42,6 +45,19 @@ func (rc *RatesCollector) Collect(ctx context.Context) error {
 	if err = json.Unmarshal(body, &responseData); err != nil {
 		return fmt.Errorf("could not parse rates response: %w", err)
 	}
+
+	var insertErrors []error
+	for currency, rate := range responseData.Rub {
+		_, insertError := rc.db.Exec(`INSERT INTO currency_rates (day, currency, rate) VALUES (?, ?, ?) 
+					ON DUPLICATE KEY UPDATE rate = ?`, responseData.Date, currency, rate, rate)
+		if insertError != nil {
+			insertErrors = append(insertErrors, insertError)
+		}
+	}
+	if len(insertErrors) > 0 {
+		return errors.Join(insertErrors...)
+	}
+
 	return nil
 }
 
