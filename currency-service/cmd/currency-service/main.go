@@ -40,6 +40,7 @@ func main() {
 	g, gCtx := errgroup.WithContext(ctx)
 	httpServer := httpserver.NewHttpServer(ctx, cfg, db)
 	g.Go(func() error {
+		log.Printf("server started on port %s", httpServer.Addr)
 		return httpServer.ListenAndServe()
 	})
 	g.Go(func() error {
