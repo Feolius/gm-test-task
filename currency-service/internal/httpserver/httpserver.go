@@ -19,6 +19,7 @@ func NewHttpServer(ctx context.Context, cfg *config.Config, db *sql.DB) *http.Se
 	})
 	currencyRateRepository := repository.NewSqlCurrencyRateRepository(db)
 	mux.Handle("GET /exchange-rate", &exchangeRateHandler{&repositoryCurrencyRateLoader{currencyRateRepository}})
+	mux.Handle("GET /exchange-history", &exchangeHistoryHandler{&repositoryExchangeHistoryLoader{currencyRateRepository}})
 	httpServer := &http.Server{
 		Addr:    ":" + cfg.Port,
 		Handler: mux,

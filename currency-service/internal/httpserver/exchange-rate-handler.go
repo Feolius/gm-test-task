@@ -5,22 +5,19 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"strings"
 )
 
 type currencyRateLoader interface {
 	load(ctx context.Context, date, currency string) (float64, error)
 }
 
+type rateResponse struct {
+	Rate float64 `json:"rate"`
+}
+
 type exchangeRateHandler struct {
 	loader currencyRateLoader
-}
-
-type errResponse struct {
-	Message string `json:"message"`
-}
-
-type successResponse struct {
-	Rate float64 `json:"rate"`
 }
 
 func (h *exchangeRateHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
@@ -29,17 +26,17 @@ func (h *exchangeRateHandler) ServeHTTP(writer http.ResponseWriter, request *htt
 	date := query.Get("date")
 	currency := query.Get("currency")
 
+	var missedParams []string
 	if date == "" {
-		writer.WriteHeader(http.StatusBadRequest)
-		responseErr := json.NewEncoder(writer).Encode(errResponse{Message: "Missing query parameter: date"})
-		if responseErr != nil {
-			log.Printf("failed to write response: %v", responseErr)
-		}
-		return
+		missedParams = append(missedParams, "date")
 	}
 	if currency == "" {
+		missedParams = append(missedParams, "currency")
+	}
+	if len(missedParams) > 0 {
 		writer.WriteHeader(http.StatusBadRequest)
-		responseErr := json.NewEncoder(writer).Encode(errResponse{Message: "Missing query parameter: currency"})
+		responseErr := json.NewEncoder(writer).Encode(errResponse{Message: "Missing query parameters: " +
+			strings.Join(missedParams, ", ")})
 		if responseErr != nil {
 			log.Printf("failed to write response: %v", responseErr)
 		}
@@ -64,7 +61,7 @@ func (h *exchangeRateHandler) ServeHTTP(writer http.ResponseWriter, request *htt
 		}
 		return
 	}
-	responseErr := json.NewEncoder(writer).Encode(successResponse{Rate: res})
+	responseErr := json.NewEncoder(writer).Encode(rateResponse{Rate: res})
 	if responseErr != nil {
 		log.Printf("failed to write response: %v", err)
 	}
