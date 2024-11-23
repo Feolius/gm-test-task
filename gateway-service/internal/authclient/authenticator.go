@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"gateway-service/internal/config"
 	"io"
 	"net/http"
 	"net/url"
@@ -35,7 +34,7 @@ type UserSearcher interface {
 
 type AuthClient struct {
 	userSearcher UserSearcher
-	cfg          *config.Config
+	url          *url.URL
 }
 
 func (a *AuthClient) GetToken(ctx context.Context, username, password string) (string, error) {
@@ -46,9 +45,9 @@ func (a *AuthClient) GetToken(ctx context.Context, username, password string) (s
 	if user.empty() {
 		return "", fmt.Errorf("%w", ErrInvalidCredentials)
 	}
-	// @TODO put url scheme inside config as well
-	genTokenUrl := buildAuthServiceUrl("http", a.cfg.AuthHost, a.cfg.AuthPort, generateTokenPath)
-	req, err := http.NewRequest(http.MethodGet, genTokenUrl, nil)
+	genTokenUrl := *a.url
+	genTokenUrl.Path = generateTokenPath
+	req, err := http.NewRequest(http.MethodGet, genTokenUrl.String(), nil)
 	if err != nil {
 		return "", fmt.Errorf("error on creating generate token request: %w", err)
 	}
@@ -71,8 +70,9 @@ func (a *AuthClient) GetToken(ctx context.Context, username, password string) (s
 // CheckToken Ideally should return User.
 func (a *AuthClient) CheckToken(ctx context.Context, token string) error {
 	token = strings.TrimPrefix(token, "Bearer ")
-	validateTokenUrl := buildAuthServiceUrl("http", a.cfg.AuthHost, a.cfg.AuthPort, validateTokenPath)
-	req, err := http.NewRequest(http.MethodGet, validateTokenUrl, nil)
+	validateTokenUrl := *a.url
+	validateTokenUrl.Path = validateTokenPath
+	req, err := http.NewRequest(http.MethodGet, validateTokenUrl.String(), nil)
 	if err != nil {
 		return fmt.Errorf("error on creating authentication request: %w", err)
 	}
@@ -96,18 +96,9 @@ func (a *AuthClient) CheckToken(ctx context.Context, token string) error {
 	return nil
 }
 
-func NewAuthClient(userSearcher UserSearcher, cfg *config.Config) *AuthClient {
+func NewAuthClient(userSearcher UserSearcher, serviceUrl *url.URL) *AuthClient {
 	return &AuthClient{
 		userSearcher: userSearcher,
-		cfg:          cfg,
+		url:          serviceUrl,
 	}
-}
-
-func buildAuthServiceUrl(proto, host, port, path string) string {
-	u := &url.URL{
-		Scheme: proto,
-		Host:   host + ":" + port,
-		Path:   path,
-	}
-	return u.String()
 }

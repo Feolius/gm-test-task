@@ -1,5 +1,6 @@
 {
   "port": "3000",
+  "auth_scheme": "http",
   "auth_host": "localhost",
   "auth_port": "8080"
 }

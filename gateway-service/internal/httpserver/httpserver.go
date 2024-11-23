@@ -7,6 +7,7 @@ import (
 	"gateway-service/internal/repository"
 	"net"
 	"net/http"
+	"net/url"
 	"time"
 )
 
@@ -15,7 +16,11 @@ const ReadHeaderTimeoutInSeconds = 2
 func NewHttpServer(ctx context.Context, cfg *config.Config) *http.Server {
 	userRepository := repository.NewInMemoryUserRepository()
 	userSearcher := &inMemoryUserSearcher{userRepository}
-	authClient := authclient.NewAuthClient(userSearcher, cfg)
+	authClientUrl := &url.URL{
+		Scheme: cfg.AuthScheme,
+		Host:   cfg.AuthHost + ":" + cfg.AuthPort,
+	}
+	authClient := authclient.NewAuthClient(userSearcher, authClientUrl)
 	authHandler := authMiddleware(&authClientAuthenticator{authClient})
 
 	mux := http.NewServeMux()
