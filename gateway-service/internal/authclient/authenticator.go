@@ -10,8 +10,8 @@ import (
 	"strings"
 )
 
-const generateTokenPath = "generate"
-const validateTokenPath = "validate"
+const generateTokenPath = "/generate"
+const validateTokenPath = "/validate"
 
 var ErrInvalidCredentials = errors.New("invalid credentials")
 var ErrAuthServiceTokenGen = errors.New("auth service token generation failed")

@@ -27,7 +27,7 @@ type loginResponse struct {
 	Token string `json:"token"`
 }
 
-func (l loginHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
+func (l *loginHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 	decoder := json.NewDecoder(request.Body)
 	var req loginRequest
 	err := decoder.Decode(&req)

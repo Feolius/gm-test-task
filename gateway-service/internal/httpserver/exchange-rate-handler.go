@@ -1,12 +1,23 @@
 package httpserver
 
 import (
+	"log"
 	"net/http"
 )
 
-type exchangeRateHandler struct {
+type requestProxy interface {
+	handle(writer http.ResponseWriter, request *http.Request) error
 }
 
-func (h *exchangeRateHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
-	writer.WriteHeader(http.StatusOK)
+type proxyHandler struct {
+	proxy requestProxy
+}
+
+func (h *proxyHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
+	err := h.proxy.handle(writer, request)
+	if err != nil {
+		log.Printf("failed to proxy request: %v", err)
+		writer.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 }

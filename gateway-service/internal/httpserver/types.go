@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"gateway-service/internal/authclient"
+	currency_service "gateway-service/internal/currency-service"
 	"gateway-service/internal/repository"
 	"net/http"
 	"strings"
@@ -73,4 +74,12 @@ func (a *authClientAuthenticator) authenticate(req *http.Request) error {
 		return err
 	}
 	return nil
+}
+
+type currencyRateProxyHandler struct {
+	currencySvcProxy *currency_service.CurrencyServiceProxy
+}
+
+func (h *currencyRateProxyHandler) handle(writer http.ResponseWriter, request *http.Request) error {
+	return h.currencySvcProxy.ExchangeRate(writer, request)
 }

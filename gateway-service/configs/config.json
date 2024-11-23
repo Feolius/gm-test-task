@@ -2,5 +2,8 @@
   "port": "3000",
   "auth_scheme": "http",
   "auth_host": "localhost",
-  "auth_port": "8080"
+  "auth_port": "8080",
+  "currency_scheme": "http",
+  "currency_host": "localhost",
+  "currency_port": "3030"
 }
