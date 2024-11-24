@@ -10,8 +10,6 @@ services:
     volumes:
       - ./mysql-data:/var/lib/mysql:cached
       - ./logs/db:/var/log/mysql:cached
-    ports:
-      - "33060:3306"
   auth-generator:
     container_name: test_task_auth_generator
     image: andrianovartemii/gm-test-task-auth-generator:latest
@@ -24,6 +22,13 @@ services:
     build:
       context: currency-service
       dockerfile: Dockerfile
+    environment:
+      PORT: 3030
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
   gateway-service:
     container_name: test_task_gateway_service
     build:
@@ -31,6 +36,12 @@ services:
       dockerfile: Dockerfile
     ports:
       - "3000:3000"
+    environment:
+      PORT: 3000
+      AUTH_HOST: auth-generator
+      AUTH_PORT: 8080
+      CURRENCY_HOST: currency-service
+      CURRENCY_PORT: 3030
   pma:
     container_name: test_task_pma
     image: phpmyadmin/phpmyadmin

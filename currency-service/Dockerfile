@@ -10,4 +10,6 @@ FROM alpine as prod
 RUN apk add --no-cache tzdata
 WORKDIR /app
 COPY --from=builder /app/app /app
+COPY configs configs
+COPY db/migrations db/migrations
 CMD [ "/app/app" ]
