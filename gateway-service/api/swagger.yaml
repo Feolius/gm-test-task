@@ -1,0 +1,164 @@
+openapi: 3.0.3
+info:
+  title: Test task
+  description: |-
+    This is test task. I don't know why did I do this.
+  version: 0.0.1
+
+tags:
+  - name: authentication
+    description: Authentication related endpoints
+  - name: currency
+    description: Currency related endpoints
+paths:
+  /login:
+    post:
+      tags:
+        - authentication
+      description: Return auth bearer token
+      requestBody:
+        description: Login credentials
+        content:
+          application/json:
+            schema:
+              required:
+                - username
+                - password
+              type: object
+              properties:
+                username:
+                  type: string
+                  example: user
+                password:
+                  type: string
+                  example: pass
+      responses:
+        '200':
+          description: Bearer token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  tokens:
+                    type: string
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+
+  /exchange-rate:
+    get:
+      tags:
+        - currency
+      description: Returns RUB to currency exchange rate
+      parameters:
+        - name: date
+          in: query
+          description: Date in format YYYY-MM-DD
+          required: true
+          example: 2024-11-14
+          schema:
+            type: string
+        - name: currency
+          in: query
+          description: Target ISO 4217 currency code in lowercase
+          required: true
+          example: eur
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  rate:
+                    type: number
+                    example: 100.23
+                    description: Exchange rate from RUB to given currency
+        '400':
+          description: General error response, when either currency not exists or rate was not received for given date
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '401':
+          description: Unauthorized error
+        '404':
+          description: Not found error response, when either currency not exists or rate was not received for given date
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+
+  /exchange-history:
+    get:
+      tags:
+        - currency
+      description: Returns RUB to currency exchange rate history for given date range
+      parameters:
+        - name: currency
+          in: query
+          description: Target ISO 4217 currency code in lowercase
+          required: true
+          example: eur
+          schema:
+            type: string
+        - name: start_date
+          in: query
+          description: Date in format YYYY-MM-DD
+          required: true
+          example: 2024-11-14
+          schema:
+            type: string
+        - name: end_date
+          in: query
+          description: Date in format YYYY-MM-DD
+          required: true
+          example: 2024-11-20
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    date:
+                      type: string
+                      example: eur
+                      description: Date in format YYYY-MM-DD
+                    rate:
+                      type: number
+                      example: 100.23
+                      description: Exchange rate for this currency
+        '400':
+          description: General error response, when either currency not exists or rate was not received for given date
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '401':
+          description: Unauthorized error
+
