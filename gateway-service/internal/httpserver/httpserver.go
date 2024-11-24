@@ -35,6 +35,7 @@ func NewHttpServer(ctx context.Context, cfg *config.Config) *http.Server {
 	})
 	mux.Handle("POST /login", &loginHandler{cfg, &authTokenProvider{authClient}})
 	mux.Handle("GET /exchange-rate", authHandler(&proxyHandler{&currencyRateProxyHandler{currencySvcProxy}}))
+	mux.Handle("GET /exchange-history", authHandler(&proxyHandler{&historyRateProxyHandler{currencySvcProxy}}))
 	httpServer := &http.Server{
 		Addr:    ":" + cfg.Port,
 		Handler: mux,

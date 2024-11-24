@@ -9,21 +9,31 @@ import (
 )
 
 const ExchangeRatePath = "/exchange-rate"
+const ExchangeHistoryPath = "/exchange-history"
 
 type CurrencyServiceProxy struct {
 	url *url.URL
 }
 
-func (c *CurrencyServiceProxy) ExchangeRate(writer http.ResponseWriter, request *http.Request) error {
-	reqUrl := *c.url
-	reqUrl.Path += ExchangeRatePath
+func (p *CurrencyServiceProxy) ExchangeHistory(writer http.ResponseWriter, request *http.Request) error {
+	return p.proxyToPath(ExchangeHistoryPath, writer, request)
+}
+
+func (p *CurrencyServiceProxy) ExchangeRate(writer http.ResponseWriter, request *http.Request) error {
+	return p.proxyToPath(ExchangeRatePath, writer, request)
+}
+
+func (p *CurrencyServiceProxy) proxyToPath(path string, writer http.ResponseWriter, request *http.Request) error {
+	reqUrl := *p.url
+	reqUrl.Path += path
 	reqUrl.RawQuery = request.URL.RawQuery
 
-	req, err := http.NewRequest(http.MethodGet, reqUrl.String(), nil)
+	req, err := http.NewRequest(request.Method, reqUrl.String(), nil)
 	if err != nil {
 		return fmt.Errorf("failed to create exhange-rate request: %w", err)
 	}
 	req = req.WithContext(request.Context())
+	req.Body = request.Body
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return fmt.Errorf("failed to execute exhange-rate request: %w", err)

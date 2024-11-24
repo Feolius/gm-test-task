@@ -76,10 +76,22 @@ func (a *authClientAuthenticator) authenticate(req *http.Request) error {
 	return nil
 }
 
+type requestProxy interface {
+	handle(writer http.ResponseWriter, request *http.Request) error
+}
+
 type currencyRateProxyHandler struct {
 	currencySvcProxy *currency_service.CurrencyServiceProxy
 }
 
 func (h *currencyRateProxyHandler) handle(writer http.ResponseWriter, request *http.Request) error {
 	return h.currencySvcProxy.ExchangeRate(writer, request)
+}
+
+type historyRateProxyHandler struct {
+	currencySvcProxy *currency_service.CurrencyServiceProxy
+}
+
+func (h *historyRateProxyHandler) handle(writer http.ResponseWriter, request *http.Request) error {
+	return h.currencySvcProxy.ExchangeHistory(writer, request)
 }

@@ -5,10 +5,6 @@ import (
 	"net/http"
 )
 
-type requestProxy interface {
-	handle(writer http.ResponseWriter, request *http.Request) error
-}
-
 type proxyHandler struct {
 	proxy requestProxy
 }
